@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>博客列表页</title>
+    <link rel="stylesheet" href="./css/common.css">
+    <!-- <link rel="stylesheet" href="./css/blog_detail.css"> -->
+    <link rel="stylesheet" href="./css/blog_list.css">
+</head>
+
+<body>
+    <!-- 导航栏 -->
+    <div class="nav">
+        <img src="./image/刘雨昕.jpg" alt="">
+        <span class="title">我的博客系统</span>
+        <!-- 使用两个span把左右元素撑开 -->
+        <span class="spacer"></span>
+        <a href="blog_list.html">主页</a>
+        <a href="blog_edit.html">写博客</a>
+        <a href="logout">注销</a>
+
+    </div>
+
+    <!-- 版心 -->
+    <div class="container">
+        <!-- 左侧版心，用来显示用户的信息 -->
+        <div class="container-left">
+            <!-- 用户详情 -->
+            <div class="card">
+                <!-- 用户头像 -->
+                <img src="./image/1.png" alt="">
+                <!-- 用户名字 -->
+                <h3></h3>
+                <!-- gitee 地址 -->
+                <a href="https://gitee.com/yuanye12123/projects">gitee地址</a>
+                <!-- <br> -->
+                <a href="https://github.com/power152">github地址</a>
+                <!-- 显示文章分类的数目  -->
+                <div class="counter">
+                    <span>文章</span>
+                    <span>分类</span>
+
+                </div>
+                <div class="counter">
+                    <span>2</span>
+                    <span>1</span>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 右侧版心，用来显示博客列表-->
+        <div class="container-right">
+            <!-- <div class="blog">
+                <div class="title">我的第一篇博客</div>
+                <div class="date">2022-03-24</div>
+                <div class="desc">
+                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Repellat soluta ut
+                    accusantium quos sed, totam atque facere laborum asperiores, magni autem ullam temporibus veniam
+                    voluptatem dolorem. Dolorem iste repellat cupiditate.
+                </div>
+                <a href="#" class="detail">查看全文 &gt; &gt;</a>
+                
+            </div> -->
+
+        </div>
+    </div>
+
+    <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+    <script>
+        // 1、给服务器发送一个ajax请求，让服务器加载博客列表
+        $.ajax({
+            url: "blog",
+            method: "get",
+            // success 是一个回调函数，浏览器收到服务器的响应数据的时候回调
+            // data 代码响应body，status代表状态码，成功success，
+            success: function (data, status) {
+                // 由于响应的是一个json格式，因此jquery就会自动把响应的数据转成对象数组
+                buildBlogs(data);
+            },
+            error: function () {
+                // 这里是ajax这行失败过后的回调
+                // 如果这里返回403，出发error这个函数，任务登录失败，直接js重定向博客页面
+                location.assign("blog_login.html");
+            }
+        });
+
+        // 在给服务器发送个ajax，来获取用户的登录信息
+        $.ajax({
+            url: "user",
+            method: "get",
+            success: function (data, status) {
+                changeUser(data)
+            }
+        });
+
+        function changeUser(user) {
+            let h3 = document.querySelector(".container-left .card h3");
+            h3.innerHTML = user.username;
+        }
+
+
+        function buildBlogs(data) {
+            // 通过这个函数来构造页面的过程
+            // data 中的每个数组都对应到每个元素，一个元素都对应到一个博客对象
+            // 根据这里的每个数组的元素，构建出一系列的HTML标签，并且插入到页面
+
+            //构建一个父元素
+            let container = document.querySelector(".container-right");
+
+            for (let blog of data) {
+                let blogDiv = document.createElement('div');
+                blogDiv.className = "blog";
+
+                // 构建标题
+                let titleDiv = document.createElement("div");
+                titleDiv.className = "title";
+                titleDiv.innerHTML = blog.title;
+                blogDiv.appendChild(titleDiv);
+
+                // 构造发布日期
+                let dateDiv = document.createElement("div");
+                dateDiv.className = "date";
+                //这里如果是单独的blog.postTime 那么就是页面返回时间戳，这是可以借助js中自创的formatDate函数来转换时间格式
+                dateDiv.innerHTML = formatDate(blog.postTime);
+                blogDiv.appendChild(dateDiv);
+
+                // 构造摘要
+                let descDiv = document.createElement("div");
+                descDiv.className = "desc";
+                descDiv.innerHTML = blog.content;
+                blogDiv.appendChild(descDiv);
+
+                // 构造 a 标签
+                let detailA = document.createElement("a");
+                detailA.className = "detail";
+                detailA.innerHTML = "查看全文 &gt; &gt;";
+                // 此处必须要明确的描述出要访问的博客正文是哪篇博客的. 
+                detailA.href = "blog_detail.html?blogId=" + blog.blogId;
+                blogDiv.appendChild(detailA);
+
+                // 最后把构造好的blogDiv给放入父元素中
+                container.appendChild(blogDiv);
+            }
+
+
+            // 这个时间格式函数就是进行格式化，这段代码可以直接赋值粘贴
+            function formatDate(time) {
+                // 通过这个函数, 把时间戳转成格式化的日期, 形如 2022-03-09 12:00:00 
+                var date = new Date(time);
+                var year = date.getFullYear(),
+                    month = date.getMonth() + 1,//月份是从0开始的
+                    day = date.getDate(),
+                    hour = date.getHours(),
+                    min = date.getMinutes(),
+                    sec = date.getSeconds();
+                var newTime = year + '-' +
+                    (month < 10 ? '0' + month : month) + '-' +
+                    (day < 10 ? '0' + day : day) + ' ' +
+                    (hour < 10 ? '0' + hour : hour) + ':' +
+                    (min < 10 ? '0' + min : min) + ':' +
+                    (sec < 10 ? '0' + sec : sec);
+                return newTime;
+            }
+
+
+        }
+    </script>
+</body>
+
+</html>
